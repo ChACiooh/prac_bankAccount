@@ -2,16 +2,15 @@
 #include <algorithm>
 
 /** AusVoteSystem **/
-AusVoteSystem::AusVoteSystem(const vector<string>& candidate_names)
+AusVoteSystem::AusVoteSystem(const vector<string>& candidate_names) : num_of_candidates(candidate_names.size())
 {
-	for(size_t i=0; i<candidate_names.size(); i++)
+	for(int i=0; i<num_of_candidates; i++)
 	{
 		Candidate c;
 		c.name = candidate_names[i];
 		c.votes = 0;
 		candidates.push_back(c);
 	}
-	num_of_candidates = candidates.size();
 }
 
  // 후보별 선호도를 1순위부터 입력.
