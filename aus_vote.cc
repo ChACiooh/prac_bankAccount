@@ -25,6 +25,7 @@ bool AusVoteSystem::AddVote(const vector<int>& vote)
 
 	// vote는 선호도 순서대로 나열한 것.
 	// 즉 i번째 vote에 해당하는 사람에게 투표수를 증가시키면 된다.
+	SetVoteZero(); // 0으로 초기화.
 	for(i=0;i<vote.size();i++)
 		candidates[ vote[i]-1 ].votes++;
 
@@ -46,6 +47,15 @@ vector<AusVoteSystem::RoundResult> AusVoteSystem::ComputeResult() const
 	}
 	return r_result;
 }
+
+void AusVoteSystem::SetVoteZero()
+{
+	for(size_t i=0;i<candidates.size();i++)
+	{
+		candidates[i].votes = 0;
+	}
+}
+// AusVoteSystem end.
 
 
 /** compare function for sorting **/

@@ -34,6 +34,7 @@ public:
 
 private:
  // 입력받은 투표를 계산에 적합한 방식으로 저장하는 멤버 변수를 설계.
+ void SetVoteZero();
  int num_of_candidates;
  RoundResult candidates;
  vector<Voter> voters;
