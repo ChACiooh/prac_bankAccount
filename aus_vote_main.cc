@@ -2,13 +2,17 @@
 #include "aus_vote.h"
 
 inline int process();
-int main() { return process(); }
+int main() {
+	return process();
+}
 
 int process()
 {
 	int num_of_candidates;
     vector<string> names;
     cin >> num_of_candidates;
+    if(num_of_candidates <= 0)	return 0;
+
     for(int i = 0; i < num_of_candidates; i++)
 	{
 		string name;

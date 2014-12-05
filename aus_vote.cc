@@ -76,9 +76,11 @@ void AusVoteSystem::ComputeResult() const
 	vector<Voter> voters = voters_;
 	size_t round_score = 1;
 	string winner = "";
-	do
+	bool is_get_over_half = false;
+	vector<int> drops; // 탈락자 명단
+
+	while(!is_get_over_half)
 	{
-		if(num < 0)	break;
 		SetVotesToZero(round_result);
 		AddVote(round_result, voters);
 
@@ -86,10 +88,13 @@ void AusVoteSystem::ComputeResult() const
 		sort(for_sort.begin(), for_sort.end(), comp);
 		cout << "Round " << round_score << ":" << round_result << endl;
 		round_score++;
+		if(num <= 1)	break;
+
+		is_get_over_half = (for_sort[for_sort.size()-1].votes >= (num_of_voters+1)/2);
 
 		int min_votes = INF;
-		vector<int> drops;
-		vector<Voter> temp_voters = voters;
+		//vector<int> drops;
+		//vector<Voter> temp_voters = voters;
 		bool there_are_dropout = false; // 탈락자가 있는가
 		int n = num;
 		for(size_t i=0;i<for_sort.size();i++)
@@ -100,11 +105,7 @@ void AusVoteSystem::ComputeResult() const
 				int number = for_sort[i].number;
 				drops.push_back(number);
 				n--;
-				for(size_t j=0;j<temp_voters.size();j++)
-				{
-					if(temp_voters[j].priorities[ temp_voters[j].idx ] == number)
-						temp_voters[j].idx++;
-				}
+
 			}
 			else
 			{
@@ -113,19 +114,39 @@ void AusVoteSystem::ComputeResult() const
 			}
 		}
 
+		for(size_t i=0;i<drops.size();i++)
+		{
+			for(size_t j=0;j<voters.size();j++)
+			{
+				if(voters[j].priorities[ voters[j].idx ] == drops[i])
+				{
+					//temp_voters[j].idx++;
+					voters[j].priorities.erase(voters[j].priorities.begin() + voters[j].idx);
+				}
+			}
+		}
+
 		if(there_are_dropout)
 		{
 			for(size_t i=0;i<drops.size();i++)
 			{
-				round_result.erase(round_result.begin() + drops[i] - 1);
+				size_t j = 0;
+				for(; j<round_result.size();j++)
+					if(round_result[j].number == drops[i])	break;
+				if(j<round_result.size())
+					round_result.erase(round_result.begin() + j);
 			}
-			voters = temp_voters;
+			//voters = temp_voters;
 			num = n;
 		}
 		else if(!there_are_dropout && num > 1)	break;
 
-		if(num == 1)	winner = for_sort[for_sort.size() - 1].name;
-	} while(num > 1);
+		if(num <= 1 || is_get_over_half)
+		{
+			winner = for_sort[for_sort.size() - 1].name;
+			//if(is_get_over_half)	break;
+		}
+	}
 
 	cout << "Winner: " << winner << endl;
 
