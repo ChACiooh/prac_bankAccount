@@ -17,13 +17,9 @@ struct Voter {
  {
  	for(int i=0;i<num;i++)
 		priorities.push_back(0);
-	idx = 0;
  }
 
- bool CanVote() const { return idx != -1; }
-
  vector<int> priorities;
- int idx;
 };
 
 class AusVoteSystem {

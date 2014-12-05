@@ -2,9 +2,7 @@
 #include "aus_vote.h"
 
 inline int process();
-int main() {
-	return process();
-}
+int main() { return process(); }
 
 int process()
 {

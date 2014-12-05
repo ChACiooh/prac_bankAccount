@@ -3,6 +3,7 @@
 #include <iostream>
 
 #define INF		999999
+#define FIRST_PRIORITY	0
 
 /** etc functions **/
 bool comp(Candidate a, Candidate b)
@@ -13,9 +14,8 @@ bool comp(Candidate a, Candidate b)
 ostream& operator<<(ostream& os, AusVoteSystem::RoundResult candidates)
 {
 	for(size_t i=0;i<candidates.size();i++)
-	{
 		os << " " << candidates[i].name << " " << candidates[i].votes;
-	}
+
 	return os;
 }
 // etc functions end.
@@ -44,15 +44,12 @@ AusVoteSystem::AusVoteSystem(const vector<string>& candidate_names, const vector
 
 void AusVoteSystem::SetVotesToZero(AusVoteSystem::RoundResult& candidates) const
 {
+	// 득표 수 초기화.
 	for(size_t i=0;i<candidates.size();i++)
-	{
 		candidates[i].votes = 0;
-	}
 }
 
  // 후보별 선호도를 1순위부터 입력.
- // 잘못된 숫자가 있거나 선호도 수가 후보자 수와 다르면
- // 해당 입력을 무시하고 false를 리턴.
  // typedef vector<Candidate> RoundResult
 void AusVoteSystem::AddVote(AusVoteSystem::RoundResult& candidates, vector<Voter>& voters) const
 {
@@ -62,10 +59,29 @@ void AusVoteSystem::AddVote(AusVoteSystem::RoundResult& candidates, vector<Voter
 		for(size_t i=0;i<voters.size();i++)
 		{
 			// j번째 후보를 가장 우선적으로 지지하고 있는 투표자가 있을 때 득표 수를 더한다.
-			if(number == voters[i].priorities[ voters[i].idx ])
+			if(number == voters[i].priorities[ FIRST_PRIORITY ])
 				candidates[j].votes++;
 		}
 	}
+}
+
+// 우선순위에서 탈락자들을 제거한다.
+void DeleteCandidateInPriority(const vector<int>& drops, Voter& voter)
+{
+    for(size_t i = 0; i < voter.priorities.size(); i++)
+    {
+        for(size_t j = 0; j < drops.size(); j++)
+        {
+            int num = drops[j];
+            if(num == voter.priorities[i])
+            {
+                voter.priorities.erase(voter.priorities.begin() + i);
+                i--;
+                break;
+                // i번째 후보를 제거했으므로, i번째부터 다시 j를 보게 하기 위해 break를 함.
+            }
+        }
+    }
 }
 
  // 지금까지의 투표를 바탕으로 결과를 모든 라운드에 대해 계산.
@@ -88,64 +104,51 @@ void AusVoteSystem::ComputeResult() const
 		sort(for_sort.begin(), for_sort.end(), comp);
 		cout << "Round " << round_score << ":" << round_result << endl;
 		round_score++;
-		if(num <= 1)	break;
+		if(num <= 1)	break; // 불필요한 계산을 피하기 위함.
 
 		is_get_over_half = (for_sort[for_sort.size()-1].votes >= (num_of_voters+1)/2);
 
 		int min_votes = INF;
-		//vector<int> drops;
-		//vector<Voter> temp_voters = voters;
 		bool there_are_dropout = false; // 탈락자가 있는가
 		int n = num;
 		for(size_t i=0;i<for_sort.size();i++)
 		{
-			if(min_votes >= for_sort[i].votes)
+			if(min_votes >= for_sort[i].votes) // 처음은 반드시 만족한다.
 			{
 				min_votes = for_sort[i].votes;
 				int number = for_sort[i].number;
 				drops.push_back(number);
 				n--;
-
 			}
-			else
+			else // 끝까지 else가 나오지 않는경우에는 탈락자가 없다는 뜻이므로, else 문 안에 true로 설정하도록 함.
 			{
 				there_are_dropout = true;
 				break;
 			}
 		}
 
-		for(size_t i=0;i<drops.size();i++)
-		{
-			for(size_t j=0;j<voters.size();j++)
-			{
-				if(voters[j].priorities[ voters[j].idx ] == drops[i])
-				{
-					//temp_voters[j].idx++;
-					voters[j].priorities.erase(voters[j].priorities.begin() + voters[j].idx);
-				}
-			}
-		}
+		for(size_t i = 0; i < voters.size(); i++)
+            DeleteCandidateInPriority(drops, voters[i]);
 
 		if(there_are_dropout)
 		{
 			for(size_t i=0;i<drops.size();i++)
 			{
-				size_t j = 0;
-				for(; j<round_result.size();j++)
-					if(round_result[j].number == drops[i])	break;
-				if(j<round_result.size())
-					round_result.erase(round_result.begin() + j);
+				for(size_t j = 0; j < round_result.size(); j++)
+				{
+					if(round_result[j].number == drops[i])
+					{
+						round_result.erase(round_result.begin() + j);
+						break;
+					}
+				}
 			}
-			//voters = temp_voters;
 			num = n;
 		}
 		else if(!there_are_dropout && num > 1)	break;
 
 		if(num <= 1 || is_get_over_half)
-		{
 			winner = for_sort[for_sort.size() - 1].name;
-			//if(is_get_over_half)	break;
-		}
 	}
 
 	cout << "Winner: " << winner << endl;
